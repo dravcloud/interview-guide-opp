@@ -1,0 +1,718 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>POO con el método HEPA</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..900&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: plano técnico (blueprint). La clase es el plano; cada pilar es una "lámina" del plano, en una sola columna de lectura con paneles interactivos. */
+:root{
+  --paper:#f5f8fc; --sheet:#ffffff; --ink:#0f2440; --ink-2:#4a5f7a; --grid:#dbe5f1; --line:#b9cbe0;
+  --blue:#1d5fd1; --code-bg:#0f2440; --code-fg:#e7eef8; --code-kw:#7fb4ff; --code-str:#9fe3b0; --code-com:#8aa0bd;
+  --h:#c2410c; --e:#0f766e; --p:#7c3aed; --a:#1d5fd1;
+  --h-soft:#fdeee5; --e-soft:#e2f4f2; --p-soft:#efe8fd; --a-soft:#e4edfb;
+  --ok:#15803d; --bad:#b91c1c; --ok-soft:#e5f5ea; --bad-soft:#fbe7e7;
+  --f-display:"Archivo", "Arial Narrow", system-ui, sans-serif;
+  --f-body:"Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0b1a2e; --sheet:#11233c; --ink:#e6eef9; --ink-2:#9db1cc; --grid:#17304f; --line:#2a4669;
+  --blue:#6ea3ff; --code-bg:#07111f; --code-fg:#e7eef8; --code-kw:#7fb4ff; --code-str:#9fe3b0; --code-com:#7d93b0;
+  --h:#fb923c; --e:#2dd4bf; --p:#a78bfa; --a:#6ea3ff;
+  --h-soft:#3a2216; --e-soft:#0f3330; --p-soft:#2a2045; --a-soft:#162c4f;
+  --ok:#4ade80; --bad:#f87171; --ok-soft:#133222; --bad-soft:#3b1717; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0b1a2e; --sheet:#11233c; --ink:#e6eef9; --ink-2:#9db1cc; --grid:#17304f; --line:#2a4669;
+  --blue:#6ea3ff; --code-bg:#07111f; --code-fg:#e7eef8; --code-kw:#7fb4ff; --code-str:#9fe3b0; --code-com:#7d93b0;
+  --h:#fb923c; --e:#2dd4bf; --p:#a78bfa; --a:#6ea3ff;
+  --h-soft:#3a2216; --e-soft:#0f3330; --p-soft:#2a2045; --a-soft:#162c4f;
+  --ok:#4ade80; --bad:#f87171; --ok-soft:#133222; --bad-soft:#3b1717; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font:400 17px/1.6 var(--f-body);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:32px 32px;background-attachment:fixed}
+.wrap{max-width:920px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 64px;display:flex;flex-direction:column;gap:40px}
+h1,h2,h3{font-family:var(--f-display);line-height:1.1;text-wrap:balance;margin:0}
+h2{font-size:clamp(1.6rem,4vw,2.1rem);font-weight:800;font-stretch:80%}
+h3{font-size:1.2rem;font-weight:700}
+p{margin:0}
+.eyebrow{font:600 .75rem/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--blue)}
+.sheet{background:var(--sheet);border:1px solid var(--line);border-radius:6px;padding:28px clamp(18px,4vw,36px);display:flex;flex-direction:column;gap:18px;min-width:0}
+.lead{color:var(--ink-2);max-width:65ch}
+code.k{font:500 .9em var(--f-mono);background:var(--a-soft);color:var(--ink);padding:1px 6px;border-radius:4px}
+a{color:var(--blue)}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+/* Hero */
+.hero{display:flex;flex-direction:column;gap:20px;padding-top:12px}
+.hero h1{font-size:clamp(2.4rem,8vw,4.6rem);font-weight:900;font-stretch:75%;letter-spacing:-.01em;max-width:16ch}
+.hero h1 em{font-style:normal;color:var(--blue)}
+.hepa{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.hepa button{border:2px solid var(--c);background:var(--sheet);color:var(--ink);border-radius:6px;padding:14px 12px;text-align:left;display:flex;flex-direction:column;gap:4px;min-width:0}
+.hepa button:hover{background:var(--soft)}
+.hepa .big{font:900 2.6rem/1 var(--f-display);font-stretch:75%;color:var(--c)}
+.hepa .nm{font-weight:700}
+.hepa .tg{font-size:.85rem;color:var(--ink-2);line-height:1.35}
+.c-h{--c:var(--h);--soft:var(--h-soft)} .c-e{--c:var(--e);--soft:var(--e-soft)}
+.c-p{--c:var(--p);--soft:var(--p-soft)} .c-a{--c:var(--a);--soft:var(--a-soft)}
+.mnemo{border-left:4px solid var(--blue);padding:10px 16px;background:var(--sheet);color:var(--ink-2);max-width:65ch}
+.mnemo strong{color:var(--ink)}
+
+/* Clase vs objeto */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.split>*{min-width:0}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:.95rem}
+.kv dt{font:600 .8rem/1.6 var(--f-mono);color:var(--ink-2)}
+.kv dd{margin:0}
+
+/* Code */
+pre{margin:0;background:var(--code-bg);color:var(--code-fg);border-radius:6px;padding:16px 18px;overflow-x:auto;font:400 .84rem/1.6 var(--f-mono);tab-size:4}
+pre .kw{color:var(--code-kw);font-weight:600} pre .st{color:var(--code-str)} pre .cm{color:var(--code-com);font-style:italic}
+
+/* Pilares tabs */
+.tabs{display:flex;flex-wrap:wrap;gap:8px}
+.tab{border:1.5px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:6px 14px;font-weight:600;font-size:.95rem}
+.tab[aria-selected="true"]{background:var(--c);border-color:var(--c);color:var(--sheet)}
+.pillar{display:flex;flex-direction:column;gap:16px}
+.pillar-head{display:flex;gap:16px;align-items:flex-start}
+.pillar-head .big{font:900 4rem/0.9 var(--f-display);font-stretch:75%;color:var(--c)}
+.motto{font:700 1.25rem/1.3 var(--f-display);color:var(--c)}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.fact{background:var(--soft);border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.fact .lbl{font:600 .7rem/1.2 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--c)}
+.fact p{font-size:.95rem;line-height:1.45}
+.pitfall{border:1.5px dashed var(--bad);border-radius:6px;padding:12px 14px;font-size:.95rem}
+.pitfall b{color:var(--bad)}
+
+/* Diagrama */
+.diagram{overflow-x:auto}
+.diagram svg{display:block;min-width:620px;width:100%;height:auto}
+
+/* Tabla comparativa */
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.95rem;min-width:560px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 .75rem var(--f-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--ink-2)}
+td:first-child{font-weight:700}
+
+/* Flashcards */
+.fc-stage{display:flex;flex-direction:column;align-items:center;gap:14px}
+.card{width:100%;max-width:520px;aspect-ratio:16/9;perspective:1000px;border:none;background:none;padding:0;max-height:300px}
+.card-inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.card.flip .card-inner{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:20px;text-align:center;border:2px solid var(--line)}
+.front{background:var(--sheet);font:800 clamp(1.3rem,4vw,1.9rem)/1.2 var(--f-display);font-stretch:85%}
+.back{background:var(--a-soft);transform:rotateY(180deg);font-size:1rem;line-height:1.45;color:var(--ink)}
+.face small{font:600 .7rem var(--f-mono);letter-spacing:.1em;color:var(--ink-2);text-transform:uppercase}
+.ctrls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
+.btn{border:1.5px solid var(--blue);background:transparent;color:var(--blue);border-radius:6px;padding:7px 16px;font-weight:600}
+.btn.solid{background:var(--blue);color:var(--sheet)}
+.counter{font:600 .85rem var(--f-mono);color:var(--ink-2);font-variant-numeric:tabular-nums}
+
+/* Quiz / clasificación */
+.q{display:flex;flex-direction:column;gap:10px;padding-block:14px;border-top:1px solid var(--line)}
+.q:first-of-type{border-top:none}
+.q .prompt{font-weight:600}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.opt{border:1.5px solid var(--line);background:var(--sheet);color:var(--ink);border-radius:6px;padding:9px 12px;text-align:left;font-size:.95rem}
+.opt:hover:not(:disabled){border-color:var(--blue)}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft)}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.opt:disabled{cursor:default}
+.fb{font-size:.92rem;color:var(--ink-2)}
+.fb b.ok{color:var(--ok)} .fb b.bad{color:var(--bad)}
+.score{font:700 1.1rem var(--f-display);font-variant-numeric:tabular-nums}
+.pick{display:flex;gap:8px;flex-wrap:wrap}
+.pick .opt{flex:1 1 120px;text-align:center;font-weight:700}
+
+/* Retos */
+details{border:1px solid var(--line);border-radius:6px;padding:12px 16px;background:var(--sheet)}
+details+details{margin-top:0}
+summary{cursor:pointer;font-weight:700}
+details[open] summary{margin-bottom:10px}
+.retos{display:flex;flex-direction:column;gap:12px}
+.reto{display:flex;flex-direction:column;gap:10px;border:1px solid var(--line);border-radius:6px;padding:16px}
+.lvl{font:600 .7rem var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+
+/* Plan */
+.timeline{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.step{border-top:3px solid var(--blue);padding-top:10px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.step .d{font:800 1.4rem var(--f-display);font-stretch:80%}
+.step p{font-size:.9rem;color:var(--ink-2);line-height:1.4}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:.95rem}
+.check input{margin-top:5px;accent-color:var(--blue);width:18px;height:18px}
+
+.links{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.link{border:1px solid var(--line);border-radius:6px;padding:14px;display:flex;flex-direction:column;gap:4px;text-decoration:none;color:var(--ink);min-width:0}
+.link:hover{border-color:var(--blue)}
+.link b{color:var(--blue)}
+.link span{font-size:.9rem;color:var(--ink-2)}
+footer{color:var(--ink-2);font-size:.85rem;text-align:center}
+
+@media (max-width:700px){
+  .hepa{grid-template-columns:1fr 1fr}
+  .split,.facts,.opts,.links{grid-template-columns:1fr}
+  .timeline{grid-template-columns:1fr 1fr}
+  .pillar-head .big{font-size:3rem}
+}
+@media (prefers-reduced-motion:reduce){.card-inner{transition:none}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+
+<header class="hero">
+  <span class="eyebrow">Guía de estudio · C# / .NET</span>
+  <h1>Programación Orientada a Objetos con el <em>filtro HEPA</em></h1>
+  <p class="lead">Un filtro HEPA atrapa la suciedad del aire. Los cuatro pilares de la POO atrapan el desorden del código. Memoriza la palabra y ya tienes los cuatro conceptos.</p>
+  <div class="hepa" role="list">
+    <button class="c-h" data-goto="h" role="listitem"><span class="big">H</span><span class="nm">Herencia</span><span class="tg">Reutiliza lo común</span></button>
+    <button class="c-e" data-goto="e" role="listitem"><span class="big">E</span><span class="nm">Encapsulamiento</span><span class="tg">Protege los datos</span></button>
+    <button class="c-p" data-goto="p" role="listitem"><span class="big">P</span><span class="nm">Polimorfismo</span><span class="tg">Una orden, muchas respuestas</span></button>
+    <button class="c-a" data-goto="a" role="listitem"><span class="big">A</span><span class="nm">Abstracción</span><span class="tg">Muestra el qué, oculta el cómo</span></button>
+  </div>
+  <p class="mnemo"><strong>En inglés (entrevistas):</strong> se usa <strong>"A PIE"</strong>: Abstraction, Polymorphism, Inheritance, Encapsulation. Aprende las dos: HEPA para entender, A PIE para responder en inglés.</p>
+</header>
+
+<section class="sheet" id="base">
+  <span class="eyebrow">Lámina 0 · La base</span>
+  <h2>Clase = plano. Objeto = casa construida.</h2>
+  <p class="lead">Con un solo plano un arquitecto construye muchas casas. Todas tienen la misma estructura, pero cada una tiene su propio color, dueño y dirección. Eso es exactamente la relación entre una clase y sus objetos.</p>
+  <div class="split">
+    <dl class="kv">
+      <dt>Clase</dt><dd>El molde o plano. Define qué datos y comportamientos tendrá algo.</dd>
+      <dt>Objeto</dt><dd>Una instancia concreta creada con <code class="k">new</code>.</dd>
+      <dt>Atributo</dt><dd>Un dato del objeto (propiedad o campo): <code class="k">Color</code>.</dd>
+      <dt>Método</dt><dd>Una acción del objeto: <code class="k">Encender()</code>.</dd>
+      <dt>Constructor</dt><dd>Método especial que prepara el objeto al crearlo.</dd>
+    </dl>
+<pre><code class="cs">public class Casa                // el plano
+{
+    public string Color { get; set; }
+    public int Habitaciones { get; set; }
+
+    public Casa(string color, int hab)  // constructor
+    {
+        Color = color;
+        Habitaciones = hab;
+    }
+
+    public void Pintar(string nuevo) => Color = nuevo;
+}
+
+var casaAna  = new Casa("Azul", 3);   // objeto 1
+var casaLuis = new Casa("Verde", 2);  // objeto 2</code></pre>
+  </div>
+</section>
+
+<section class="sheet" id="pilares">
+  <span class="eyebrow">Láminas 1–4 · Los pilares</span>
+  <h2>Cada pilar en 4 piezas: analogía, frase, código y error típico</h2>
+  <div class="tabs" role="tablist" aria-label="Pilares de la POO">
+    <button class="tab c-h" role="tab" data-p="h" aria-selected="true">H · Herencia</button>
+    <button class="tab c-e" role="tab" data-p="e" aria-selected="false">E · Encapsulamiento</button>
+    <button class="tab c-p" role="tab" data-p="p" aria-selected="false">P · Polimorfismo</button>
+    <button class="tab c-a" role="tab" data-p="a" aria-selected="false">A · Abstracción</button>
+  </div>
+
+  <div class="pillar c-h" data-panel="h" role="tabpanel">
+    <div class="pillar-head"><span class="big">H</span><div><h3>Herencia</h3><p class="motto">"Reutiliza lo común, especializa lo distinto."</p></div></div>
+    <div class="facts">
+      <div class="fact"><span class="lbl">Analogía</span><p>Un hijo hereda el apellido y rasgos de sus padres, y además desarrolla habilidades propias.</p></div>
+      <div class="fact"><span class="lbl">Prueba rápida</span><p>Usa herencia solo si puedes decir <b>"ES UN"</b>: un Perro <i>es un</i> Animal.</p></div>
+      <div class="fact"><span class="lbl">En C#</span><p><code class="k">:</code> para heredar, <code class="k">base</code> para llamar al padre. Solo una clase base.</p></div>
+    </div>
+<pre><code class="cs">public class Animal
+{
+    public string Nombre { get; set; }
+    public void Comer() => Console.WriteLine($"{Nombre} está comiendo");
+}
+
+public class Perro : Animal          // Perro ES UN Animal
+{
+    public void Ladrar() => Console.WriteLine("¡Guau!");
+}
+
+var firulais = new Perro { Nombre = "Firulais" };
+firulais.Comer();   // heredado de Animal
+firulais.Ladrar();  // propio de Perro</code></pre>
+    <p class="pitfall"><b>Error típico:</b> heredar solo para reutilizar código. Un <code class="k">Carro</code> no "es un" <code class="k">Motor</code>; un carro "TIENE UN" motor. Ahí se usa composición (un atributo), no herencia.</p>
+  </div>
+
+  <div class="pillar c-e" data-panel="e" role="tabpanel" hidden>
+    <div class="pillar-head"><span class="big">E</span><div><h3>Encapsulamiento</h3><p class="motto">"Oculta los datos, expone acciones seguras."</p></div></div>
+    <div class="facts">
+      <div class="fact"><span class="lbl">Analogía</span><p>Un cajero automático: no metes la mano al dinero, usas botones que validan cada operación.</p></div>
+      <div class="fact"><span class="lbl">Prueba rápida</span><p>¿Alguien de afuera puede dejar el objeto en un estado inválido? Entonces falta encapsular.</p></div>
+      <div class="fact"><span class="lbl">En C#</span><p><code class="k">private</code> para datos, <code class="k">public</code> para métodos, propiedades con <code class="k">private set</code>.</p></div>
+    </div>
+<pre><code class="cs">public class CuentaBancaria
+{
+    private decimal _saldo;                 // nadie lo toca directo
+    public decimal Saldo => _saldo;         // solo lectura
+
+    public void Depositar(decimal monto)
+    {
+        if (monto <= 0)
+            throw new ArgumentException("El monto debe ser positivo");
+        _saldo += monto;
+    }
+
+    public bool Retirar(decimal monto)
+    {
+        if (monto > _saldo) return false;   // regla protegida
+        _saldo -= monto;
+        return true;
+    }
+}</code></pre>
+    <p class="pitfall"><b>Error típico:</b> dejar <code class="k">public decimal Saldo;</code> como campo público. Cualquier parte del sistema podría escribir <code class="k">cuenta.Saldo = -500</code>.</p>
+  </div>
+
+  <div class="pillar c-p" data-panel="p" role="tabpanel" hidden>
+    <div class="pillar-head"><span class="big">P</span><div><h3>Polimorfismo</h3><p class="motto">"Una orden, muchas respuestas."</p></div></div>
+    <div class="facts">
+      <div class="fact"><span class="lbl">Analogía</span><p>El botón "Play" existe en Spotify, YouTube y un radio. Misma orden, cada uno la ejecuta a su manera.</p></div>
+      <div class="fact"><span class="lbl">Prueba rápida</span><p>¿Tienes un <code class="k">if</code> o <code class="k">switch</code> preguntando el tipo del objeto? Probablemente debería ser polimorfismo.</p></div>
+      <div class="fact"><span class="lbl">En C#</span><p><code class="k">virtual</code> en el padre + <code class="k">override</code> en el hijo. También funciona con interfaces.</p></div>
+    </div>
+<pre><code class="cs">public class Animal
+{
+    public virtual string HacerSonido() => "...";
+}
+public class Perro : Animal { public override string HacerSonido() => "Guau"; }
+public class Gato  : Animal { public override string HacerSonido() => "Miau"; }
+
+var animales = new List&lt;Animal&gt; { new Perro(), new Gato() };
+
+foreach (var a in animales)
+    Console.WriteLine(a.HacerSonido());  // Guau, Miau
+// El mismo código funciona si mañana agregas una clase Vaca</code></pre>
+    <p class="pitfall"><b>Error típico:</b> escribir <code class="k">if (a is Perro) ... else if (a is Gato) ...</code>. Cada tipo nuevo te obliga a modificar ese bloque.</p>
+  </div>
+
+  <div class="pillar c-a" data-panel="a" role="tabpanel" hidden>
+    <div class="pillar-head"><span class="big">A</span><div><h3>Abstracción</h3><p class="motto">"Muestra el QUÉ, oculta el CÓMO."</p></div></div>
+    <div class="facts">
+      <div class="fact"><span class="lbl">Analogía</span><p>Para manejar un carro usas volante y pedales. No necesitas saber cómo funciona la inyección del motor.</p></div>
+      <div class="fact"><span class="lbl">Prueba rápida</span><p>¿Quien usa tu clase necesita conocer detalles internos para usarla? Entonces falta abstracción.</p></div>
+      <div class="fact"><span class="lbl">En C#</span><p><code class="k">interface</code> (contrato puro) o <code class="k">abstract class</code> (contrato + código común).</p></div>
+    </div>
+<pre><code class="cs">public interface INotificador          // el QUÉ
+{
+    void Enviar(string destino, string mensaje);
+}
+
+public class EmailNotificador : INotificador   // un CÓMO
+{
+    public void Enviar(string destino, string mensaje)
+        => Console.WriteLine($"Email a {destino}: {mensaje}");
+}
+
+public class SmsNotificador : INotificador     // otro CÓMO
+{
+    public void Enviar(string destino, string mensaje)
+        => Console.WriteLine($"SMS a {destino}: {mensaje}");
+}
+
+// Quien la usa solo conoce el contrato
+void Avisar(INotificador n) => n.Enviar("ana@mail.com", "Tu pedido salió");</code></pre>
+    <p class="pitfall"><b>Error típico:</b> crear interfaces gigantes con 20 métodos. Mejor varias interfaces pequeñas y enfocadas (principio de segregación de interfaces, la "I" de SOLID).</p>
+  </div>
+</section>
+
+<section class="sheet" id="diagrama">
+  <span class="eyebrow">Lámina 5 · Los 4 pilares en un solo diagrama</span>
+  <h2>Mira cómo trabajan juntos</h2>
+  <p class="lead">En el diseño real los pilares no aparecen por separado. Este ejemplo de figuras geométricas usa los cuatro a la vez.</p>
+  <div class="diagram">
+    <svg viewBox="0 0 760 380" role="img" aria-label="Diagrama de clases: Figura abstracta con Circulo y Rectangulo">
+      <defs>
+        <marker id="tri" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto">
+          <path d="M1 1 L11 6 L1 11 Z" fill="var(--sheet)" stroke="var(--ink)" stroke-width="1.3"/>
+        </marker>
+      </defs>
+      <!-- Figura -->
+      <rect x="250" y="20" width="260" height="120" rx="4" fill="var(--a-soft)" stroke="var(--a)" stroke-width="2"/>
+      <text x="380" y="44" text-anchor="middle" fill="var(--a)" font-family="var(--f-mono)" font-size="12" font-style="italic">«abstract»</text>
+      <text x="380" y="64" text-anchor="middle" fill="var(--ink)" font-family="var(--f-display)" font-size="18" font-weight="800">Figura</text>
+      <line x1="250" y1="74" x2="510" y2="74" stroke="var(--a)"/>
+      <text x="264" y="96" fill="var(--ink)" font-family="var(--f-mono)" font-size="12"># string Nombre</text>
+      <text x="264" y="120" fill="var(--ink)" font-family="var(--f-mono)" font-size="12" font-style="italic">+ abstract double Area()</text>
+      <!-- Circulo -->
+      <rect x="60" y="230" width="270" height="120" rx="4" fill="var(--sheet)" stroke="var(--h)" stroke-width="2"/>
+      <text x="195" y="256" text-anchor="middle" fill="var(--ink)" font-family="var(--f-display)" font-size="18" font-weight="800">Circulo</text>
+      <line x1="60" y1="266" x2="330" y2="266" stroke="var(--h)"/>
+      <text x="74" y="290" fill="var(--ink)" font-family="var(--f-mono)" font-size="12">- double _radio</text>
+      <text x="74" y="316" fill="var(--ink)" font-family="var(--f-mono)" font-size="12">+ override double Area()</text>
+      <text x="74" y="336" fill="var(--ink-2)" font-family="var(--f-mono)" font-size="11">  π × r²</text>
+      <!-- Rectangulo -->
+      <rect x="430" y="230" width="270" height="120" rx="4" fill="var(--sheet)" stroke="var(--h)" stroke-width="2"/>
+      <text x="565" y="256" text-anchor="middle" fill="var(--ink)" font-family="var(--f-display)" font-size="18" font-weight="800">Rectangulo</text>
+      <line x1="430" y1="266" x2="700" y2="266" stroke="var(--h)"/>
+      <text x="444" y="290" fill="var(--ink)" font-family="var(--f-mono)" font-size="12">- double _base, _alto</text>
+      <text x="444" y="316" fill="var(--ink)" font-family="var(--f-mono)" font-size="12">+ override double Area()</text>
+      <text x="444" y="336" fill="var(--ink-2)" font-family="var(--f-mono)" font-size="11">  base × alto</text>
+      <!-- flechas herencia -->
+      <path d="M195 230 L195 185 L330 185 L330 141" fill="none" stroke="var(--ink)" stroke-width="1.5" marker-end="url(#tri)"/>
+      <path d="M565 230 L565 185 L430 185 L430 141" fill="none" stroke="var(--ink)" stroke-width="1.5" marker-end="url(#tri)"/>
+      <!-- etiquetas pilares -->
+      <g font-family="var(--f-mono)" font-size="11" font-weight="600">
+        <rect x="522" y="34" width="150" height="24" rx="12" fill="var(--a-soft)" stroke="var(--a)"/>
+        <text x="597" y="50" text-anchor="middle" fill="var(--a)">A · contrato abstracto</text>
+        <rect x="305" y="196" width="150" height="24" rx="12" fill="var(--h-soft)" stroke="var(--h)"/>
+        <text x="380" y="212" text-anchor="middle" fill="var(--h)">H · ES UNA Figura</text>
+        <rect x="74" y="356" width="160" height="22" rx="11" fill="var(--e-soft)" stroke="var(--e)"/>
+        <text x="154" y="371" text-anchor="middle" fill="var(--e)">E · datos privados (-)</text>
+        <rect x="444" y="356" width="200" height="22" rx="11" fill="var(--p-soft)" stroke="var(--p)"/>
+        <text x="544" y="371" text-anchor="middle" fill="var(--p)">P · Area() responde distinto</text>
+      </g>
+    </svg>
+  </div>
+  <p class="fb">Notación UML: <code class="k">+</code> public · <code class="k">-</code> private · <code class="k">#</code> protected · cursiva = abstracto · flecha con triángulo = herencia.</p>
+</section>
+
+<section class="sheet" id="confusiones">
+  <span class="eyebrow">Lámina 6 · Las confusiones más comunes</span>
+  <h2>Parejas que se confunden en entrevistas</h2>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Pareja</th><th>La diferencia en una línea</th><th>Truco para recordarlo</th></tr></thead>
+      <tbody>
+        <tr><td>Abstracción vs Encapsulamiento</td><td>Abstracción decide <b>qué</b> se muestra (diseño). Encapsulamiento <b>protege</b> cómo está hecho (implementación).</td><td>Abstracción = menú del restaurante. Encapsulamiento = puerta cerrada de la cocina.</td></tr>
+        <tr><td>Interface vs Clase abstracta</td><td>Interface es solo contrato y se pueden implementar varias. Clase abstracta puede traer código común, pero solo heredas una.</td><td>Interface = "PUEDE hacer" (IVolador). Abstracta = "ES UN tipo de" (Figura).</td></tr>
+        <tr><td>Overload vs Override</td><td>Overload: mismo nombre, otros parámetros, en la misma clase. Override: redefinir el método del padre.</td><td>Over<b>load</b> = cargar más versiones. Over<b>ride</b> = pasar por encima del padre.</td></tr>
+        <tr><td>Herencia vs Composición</td><td>Herencia es una relación "ES UN". Composición es "TIENE UN".</td><td>Prefiere composición cuando dudes. Es más flexible.</td></tr>
+        <tr><td>Clase vs Objeto</td><td>La clase se escribe una vez. Los objetos se crean muchas veces en ejecución.</td><td>Plano vs casa.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="sheet" id="flash">
+  <span class="eyebrow">Recurso 1 · Flashcards</span>
+  <h2>Tarjetas de memoria activa</h2>
+  <p class="lead">Intenta responder en voz alta antes de voltear la tarjeta. Recordar con esfuerzo fija mejor que releer.</p>
+  <div class="fc-stage">
+    <button class="card" id="card" aria-live="polite">
+      <div class="card-inner">
+        <div class="face front"><small>Pregunta</small><span id="fc-q"></span></div>
+        <div class="face back"><small>Respuesta</small><span id="fc-a"></span></div>
+      </div>
+    </button>
+    <div class="ctrls">
+      <button class="btn" id="fc-prev">← Anterior</button>
+      <span class="counter" id="fc-n"></span>
+      <button class="btn" id="fc-next">Siguiente →</button>
+      <button class="btn solid" id="fc-shuffle">Mezclar</button>
+    </div>
+  </div>
+</section>
+
+<section class="sheet" id="clasifica">
+  <span class="eyebrow">Recurso 2 · Ejercicio de reconocimiento</span>
+  <h2>¿Qué pilar es?</h2>
+  <p class="lead">Lee el escenario y elige la letra del pilar que mejor lo describe.</p>
+  <div id="classify"></div>
+  <p class="score" id="cls-score"></p>
+</section>
+
+<section class="sheet" id="quiz">
+  <span class="eyebrow">Recurso 3 · Autoevaluación</span>
+  <h2>Mini quiz</h2>
+  <div id="quiz-box"></div>
+  <div class="ctrls" style="justify-content:flex-start"><span class="score" id="quiz-score"></span><button class="btn" id="quiz-reset">Reiniciar quiz</button></div>
+</section>
+
+<section class="sheet" id="retos">
+  <span class="eyebrow">Recurso 4 · Práctica en código</span>
+  <h2>Retos para escribir tú mismo</h2>
+  <p class="lead">Crea un proyecto con <code class="k">dotnet new console -n RetosPOO</code> y resuelve cada reto antes de abrir la solución.</p>
+  <div class="retos">
+    <div class="reto">
+      <span class="lvl">Reto 1 · Encapsulamiento · 15 min</span>
+      <p>Crea una clase <code class="k">Producto</code> con <code class="k">Nombre</code>, <code class="k">Precio</code> y <code class="k">Stock</code>. El precio nunca puede ser negativo y el stock solo cambia con los métodos <code class="k">Vender(cantidad)</code> y <code class="k">Reponer(cantidad)</code>.</p>
+      <details><summary>Ver solución</summary>
+<pre><code class="cs">public class Producto
+{
+    public string Nombre { get; }
+    public decimal Precio { get; private set; }
+    public int Stock { get; private set; }
+
+    public Producto(string nombre, decimal precio)
+    {
+        Nombre = nombre;
+        CambiarPrecio(precio);
+    }
+
+    public void CambiarPrecio(decimal precio)
+    {
+        if (precio < 0) throw new ArgumentException("Precio inválido");
+        Precio = precio;
+    }
+
+    public bool Vender(int cantidad)
+    {
+        if (cantidad <= 0 || cantidad > Stock) return false;
+        Stock -= cantidad;
+        return true;
+    }
+
+    public void Reponer(int cantidad)
+    {
+        if (cantidad <= 0) throw new ArgumentException("Cantidad inválida");
+        Stock += cantidad;
+    }
+}</code></pre></details>
+    </div>
+    <div class="reto">
+      <span class="lvl">Reto 2 · Herencia + Polimorfismo + Abstracción · 20 min</span>
+      <p>Implementa el diagrama de la lámina 5: una clase abstracta <code class="k">Figura</code> con <code class="k">Area()</code>, y las clases <code class="k">Circulo</code> y <code class="k">Rectangulo</code>. Imprime el área de una lista mixta de figuras con un solo <code class="k">foreach</code>.</p>
+      <details><summary>Ver solución</summary>
+<pre><code class="cs">public abstract class Figura
+{
+    protected string Nombre;
+    protected Figura(string nombre) => Nombre = nombre;
+    public abstract double Area();
+    public override string ToString() => $"{Nombre}: {Area():F2}";
+}
+
+public class Circulo : Figura
+{
+    private readonly double _radio;
+    public Circulo(double r) : base("Círculo") => _radio = r;
+    public override double Area() => Math.PI * _radio * _radio;
+}
+
+public class Rectangulo : Figura
+{
+    private readonly double _base, _alto;
+    public Rectangulo(double b, double a) : base("Rectángulo")
+        => (_base, _alto) = (b, a);
+    public override double Area() => _base * _alto;
+}
+
+var figuras = new List&lt;Figura&gt; { new Circulo(2), new Rectangulo(3, 4) };
+foreach (var f in figuras) Console.WriteLine(f);
+// Círculo: 12.57
+// Rectángulo: 12.00</code></pre></details>
+    </div>
+    <div class="reto">
+      <span class="lvl">Reto 3 · Abstracción con interfaces · 25 min</span>
+      <p>Diseña un sistema de pagos: interfaz <code class="k">IMetodoPago</code> con <code class="k">Procesar(decimal monto)</code> y dos implementaciones, <code class="k">PagoTarjeta</code> (cobra 3% de comisión) y <code class="k">PagoTransferencia</code> (sin comisión). Una clase <code class="k">Checkout</code> debe funcionar con cualquiera sin saber cuál es.</p>
+      <details><summary>Ver solución</summary>
+<pre><code class="cs">public interface IMetodoPago
+{
+    decimal Procesar(decimal monto);   // devuelve el total cobrado
+}
+
+public class PagoTarjeta : IMetodoPago
+{
+    private const decimal Comision = 0.03m;
+    public decimal Procesar(decimal monto) => monto * (1 + Comision);
+}
+
+public class PagoTransferencia : IMetodoPago
+{
+    public decimal Procesar(decimal monto) => monto;
+}
+
+public class Checkout
+{
+    private readonly IMetodoPago _pago;
+    public Checkout(IMetodoPago pago) => _pago = pago;   // inyección de dependencias
+    public void Pagar(decimal monto)
+        => Console.WriteLine($"Total cobrado: {_pago.Procesar(monto):C}");
+}
+
+new Checkout(new PagoTarjeta()).Pagar(100);        // 103.00
+new Checkout(new PagoTransferencia()).Pagar(100);  // 100.00</code></pre></details>
+    </div>
+  </div>
+</section>
+
+<section class="sheet" id="plan">
+  <span class="eyebrow">Recurso 5 · Repaso espaciado</span>
+  <h2>Plan para que no se te olvide</h2>
+  <p class="lead">La memoria se refuerza cuando repasas justo antes de olvidar. Sigue este calendario desde el día que leas esta guía.</p>
+  <div class="timeline">
+    <div class="step"><span class="d">Día 1</span><p>Lee la guía y haz el Reto 1.</p></div>
+    <div class="step"><span class="d">Día 2</span><p>Flashcards y "¿Qué pilar es?".</p></div>
+    <div class="step"><span class="d">Día 4</span><p>Reto 2 sin mirar la solución.</p></div>
+    <div class="step"><span class="d">Día 7</span><p>Mini quiz + explica HEPA en voz alta en 2 minutos.</p></div>
+    <div class="step"><span class="d">Día 14</span><p>Reto 3 y explícalo en inglés con "A PIE".</p></div>
+  </div>
+  <h3>Lista de dominio</h3>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <label class="check"><input type="checkbox" id="ck1">Puedo explicar la diferencia entre clase y objeto con un ejemplo propio.</label>
+    <label class="check"><input type="checkbox" id="ck2">Puedo decir los 4 pilares con una analogía cada uno, sin leer.</label>
+    <label class="check"><input type="checkbox" id="ck3">Sé cuándo usar interface y cuándo clase abstracta.</label>
+    <label class="check"><input type="checkbox" id="ck4">Distingo overload de override y "ES UN" de "TIENE UN".</label>
+    <label class="check"><input type="checkbox" id="ck5">Resolví los 3 retos sin ver la solución.</label>
+  </div>
+</section>
+
+<section class="sheet" id="recursos">
+  <span class="eyebrow">Recurso 6 · Para profundizar</span>
+  <h2>Fuentes recomendadas</h2>
+  <div class="links">
+    <a class="link" href="https://learn.microsoft.com/es-es/dotnet/csharp/fundamentals/tutorials/oop" target="_blank" rel="noopener"><b>Microsoft Learn: POO en C#</b><span>Documentación oficial con ejemplos ejecutables.</span></a>
+    <a class="link" href="https://learn.microsoft.com/es-es/dotnet/csharp/fundamentals/object-oriented/" target="_blank" rel="noopener"><b>Microsoft Learn: clases, structs y records</b><span>Fundamentos de tipos en C#.</span></a>
+    <a class="link" href="https://refactoring.guru/es/design-patterns" target="_blank" rel="noopener"><b>Refactoring.Guru</b><span>Patrones de diseño explicados con ilustraciones. El siguiente paso después de la POO.</span></a>
+    <a class="link" href="https://exercism.org/tracks/csharp" target="_blank" rel="noopener"><b>Exercism: track de C#</b><span>Ejercicios gratuitos con mentoría para practicar.</span></a>
+  </div>
+</section>
+
+<footer><a href="../">English version</a> · Repasa HEPA: <b>H</b>erencia · <b>E</b>ncapsulamiento · <b>P</b>olimorfismo · <b>A</b>bstracción</footer>
+</div>
+
+<script>
+// Resaltado simple de C#
+(function(){
+  const KW = "public|private|protected|internal|class|abstract|interface|override|virtual|void|new|return|if|else|throw|var|foreach|in|base|this|decimal|string|int|double|bool|get|set|sealed|static|readonly|const|using|true|false";
+  const re = new RegExp('(\\/\\/[^\\n]*)|(\\$?"(?:[^"\\\\]|\\\\.)*")|\\b(' + KW + ')\\b', 'g');
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('code.cs').forEach(el => {
+    const src = el.textContent; let out = '', last = 0, m;
+    while ((m = re.exec(src))) {
+      out += esc(src.slice(last, m.index));
+      const cls = m[1] ? 'cm' : m[2] ? 'st' : 'kw';
+      out += '<span class="' + cls + '">' + esc(m[0]) + '</span>';
+      last = re.lastIndex;
+    }
+    el.innerHTML = out + esc(src.slice(last));
+  });
+})();
+
+// Tabs de pilares
+const tabs = document.querySelectorAll('.tab');
+function showPillar(k){
+  tabs.forEach(t => t.setAttribute('aria-selected', t.dataset.p === k ? 'true' : 'false'));
+  document.querySelectorAll('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== k);
+}
+tabs.forEach(t => t.addEventListener('click', () => showPillar(t.dataset.p)));
+document.querySelectorAll('[data-goto]').forEach(b => b.addEventListener('click', () => {
+  showPillar(b.dataset.goto);
+  document.getElementById('pilares').scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
+}));
+
+// Flashcards
+let cards = [
+  ["¿Qué significa HEPA?", "Herencia, Encapsulamiento, Polimorfismo, Abstracción."],
+  ["Clase vs Objeto", "La clase es el plano; el objeto es la casa construida con new."],
+  ["Frase de la Herencia", "Reutiliza lo común, especializa lo distinto. Prueba: \"ES UN\"."],
+  ["Frase del Encapsulamiento", "Oculta los datos, expone acciones seguras. Analogía: cajero automático."],
+  ["Frase del Polimorfismo", "Una orden, muchas respuestas. Analogía: botón Play."],
+  ["Frase de la Abstracción", "Muestra el QUÉ, oculta el CÓMO. Analogía: volante y pedales."],
+  ["Palabras clave del polimorfismo en C#", "virtual en la clase padre y override en la clase hija."],
+  ["Interface vs clase abstracta", "Interface: solo contrato, varias por clase. Abstracta: contrato + código, solo una."],
+  ["Overload vs Override", "Overload: mismo nombre, otros parámetros. Override: redefinir el método del padre."],
+  ["¿ES UN o TIENE UN? Carro y Motor", "TIENE UN → composición, no herencia."],
+  ["¿Qué hace la palabra base?", "Accede a miembros o al constructor de la clase padre."],
+  ["En inglés, ¿cómo se recuerdan los pilares?", "A PIE: Abstraction, Polymorphism, Inheritance, Encapsulation."]
+];
+let ci = 0;
+const card = document.getElementById('card');
+function renderCard(){
+  card.classList.remove('flip');
+  document.getElementById('fc-q').textContent = cards[ci][0];
+  document.getElementById('fc-a').textContent = cards[ci][1];
+  document.getElementById('fc-n').textContent = (ci+1) + ' / ' + cards.length;
+}
+card.addEventListener('click', () => card.classList.toggle('flip'));
+document.getElementById('fc-next').onclick = () => { ci = (ci+1) % cards.length; renderCard(); };
+document.getElementById('fc-prev').onclick = () => { ci = (ci-1+cards.length) % cards.length; renderCard(); };
+document.getElementById('fc-shuffle').onclick = () => {
+  for (let i = cards.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [cards[i],cards[j]] = [cards[j],cards[i]]; }
+  ci = 0; renderCard();
+};
+renderCard();
+
+// Clasificación
+const names = {H:"Herencia", E:"Encapsulamiento", P:"Polimorfismo", A:"Abstracción"};
+const scen = [
+  ["La clase Empleado y la clase Gerente comparten Nombre y Salario; Gerente además aprueba vacaciones.", "H", "Gerente ES UN Empleado y añade su propio comportamiento."],
+  ["El campo _password es private y solo se cambia con CambiarPassword(), que valida la longitud.", "E", "El dato está protegido y solo se modifica por una acción que valida."],
+  ["Un método Exportar() genera PDF en ReportePdf y CSV en ReporteCsv; el controlador solo llama reporte.Exportar().", "P", "Misma llamada, comportamiento distinto según el objeto real."],
+  ["Tu servicio depende de IRepositorioClientes sin saber si los datos vienen de SQL Server o de un archivo.", "A", "Conoces el contrato (qué) sin depender de la implementación (cómo)."],
+  ["Una propiedad Edad tiene private set y el constructor rechaza valores menores a 0.", "E", "Se impide que el objeto quede en un estado inválido."],
+  ["Una lista de IFigura recorre Dibujar() y cada figura se dibuja a su manera.", "P", "Una sola orden, muchas respuestas."]
+];
+let clsOk = 0, clsDone = 0;
+const cbox = document.getElementById('classify');
+scen.forEach((s, i) => {
+  const q = document.createElement('div'); q.className = 'q';
+  q.innerHTML = '<p class="prompt">' + (i+1) + '. ' + s[0] + '</p><div class="pick"></div><p class="fb" hidden></p>';
+  const pick = q.querySelector('.pick'), fb = q.querySelector('.fb');
+  Object.keys(names).forEach(k => {
+    const b = document.createElement('button'); b.className = 'opt'; b.textContent = k + ' · ' + names[k];
+    b.onclick = () => {
+      pick.querySelectorAll('button').forEach(x => x.disabled = true);
+      const ok = k === s[1];
+      b.classList.add(ok ? 'ok' : 'bad');
+      if (!ok) [...pick.children].find(x => x.textContent.startsWith(s[1])).classList.add('ok');
+      fb.hidden = false;
+      fb.innerHTML = '<b class="' + (ok?'ok':'bad') + '">' + (ok ? 'Correcto.' : 'Es ' + names[s[1]] + '.') + '</b> ' + s[2];
+      clsDone++; if (ok) clsOk++;
+      document.getElementById('cls-score').textContent = 'Aciertos: ' + clsOk + ' / ' + clsDone + (clsDone === scen.length ? ' de ' + scen.length : '');
+    };
+    pick.appendChild(b);
+  });
+  cbox.appendChild(q);
+});
+
+// Quiz
+const quiz = [
+  ["¿Qué palabra clave crea un objeto a partir de una clase?", ["class","new","this","base"], 1, "new reserva memoria y llama al constructor."],
+  ["¿Qué pilar evita que alguien escriba cuenta.Saldo = -500?", ["Herencia","Polimorfismo","Encapsulamiento","Abstracción"], 2, "Haciendo el dato private y exponiendo métodos que validan."],
+  ["Un Carro tiene un Motor. ¿Qué relación usarías?", ["Herencia: Carro : Motor","Composición: un atributo Motor dentro de Carro","Polimorfismo","Una interface IMotor en Carro"], 1, "Es una relación TIENE UN, así que se usa composición."],
+  ["¿Qué se puede hacer con una interface y NO con una clase abstracta?", ["Definir métodos","Implementar varias en la misma clase","Tener propiedades","Usarla como tipo de variable"], 1, "Una clase solo hereda de una clase base, pero puede implementar varias interfaces."],
+  ["Para que Gato redefina HacerSonido() de Animal necesitas:", ["static en ambos","new en Animal y base en Gato","virtual en Animal y override en Gato","sealed en Animal"], 2, "virtual habilita la redefinición; override la realiza."],
+  ["¿Qué frase describe la abstracción?", ["Reutiliza lo común","Muestra el qué, oculta el cómo","Una orden, muchas respuestas","Protege los datos con private"], 1, "La abstracción expone solo lo necesario para usar algo."]
+];
+const qbox = document.getElementById('quiz-box');
+let qOk = 0, qDone = 0;
+function buildQuiz(){
+  qbox.innerHTML = ''; qOk = 0; qDone = 0;
+  document.getElementById('quiz-score').textContent = '';
+  quiz.forEach((it, i) => {
+    const q = document.createElement('div'); q.className = 'q';
+    q.innerHTML = '<p class="prompt">' + (i+1) + '. ' + it[0] + '</p><div class="opts"></div><p class="fb" hidden></p>';
+    const opts = q.querySelector('.opts'), fb = q.querySelector('.fb');
+    it[1].forEach((o, j) => {
+      const b = document.createElement('button'); b.className = 'opt'; b.textContent = o;
+      b.onclick = () => {
+        opts.querySelectorAll('button').forEach(x => x.disabled = true);
+        const ok = j === it[2];
+        b.classList.add(ok ? 'ok' : 'bad');
+        opts.children[it[2]].classList.add('ok');
+        fb.hidden = false;
+        fb.innerHTML = '<b class="' + (ok?'ok':'bad') + '">' + (ok ? '¡Bien!' : 'No es esa.') + '</b> ' + it[3];
+        qDone++; if (ok) qOk++;
+        document.getElementById('quiz-score').textContent = 'Puntaje: ' + qOk + ' / ' + quiz.length + (qDone === quiz.length ? (qOk === quiz.length ? ' · ¡Dominado!' : ' · Repasa las fallidas') : '');
+      };
+      opts.appendChild(b);
+    });
+    qbox.appendChild(q);
+  });
+}
+document.getElementById('quiz-reset').onclick = buildQuiz;
+buildQuiz();
+
+// Lista de dominio (recordada en este navegador)
+document.querySelectorAll('.check input').forEach(cb => {
+  try { cb.checked = localStorage.getItem('poo-' + cb.id) === '1'; } catch(e) {}
+  cb.addEventListener('change', () => { try { localStorage.setItem('poo-' + cb.id, cb.checked ? '1' : '0'); } catch(e) {} });
+});
+</script>
+
+</body>
+</html>
